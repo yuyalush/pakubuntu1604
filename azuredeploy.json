@@ -164,7 +164,7 @@
                 "publicIPAllocationMethod": "Dynamic",
                 "idleTimeoutInMinutes": 4,
                 "dnsSettings": {
-                    "domainNameLabel": "pakubuntu1604"
+                    "domainNameLabel": "[parameters('virtualMachines_Ubuntu1604VM_name')]"
                 }
             },
             "dependsOn": []
