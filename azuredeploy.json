@@ -7,7 +7,7 @@
             "type": "SecureString"
         },
         "virtualMachines_Ubuntu1604VM_name": {
-            "defaultValue": "Ubuntu1604VM",
+            "defaultValue": "ubuntu1604vm",
             "type": "String"
         },
         "networkInterfaces_myVMNic_name": {
