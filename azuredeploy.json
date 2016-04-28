@@ -1,42 +1,42 @@
+
 {
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "virtualMachines_Ubuntu1604VM_adminPassword": {
+        "AdminPassword": {
             "defaultValue": null,
             "type": "SecureString"
         },
-        "virtualMachines_Ubuntu1604VM_name": {
+        "VirtualMachineName": {
             "defaultValue": "ubuntu1604vm",
             "type": "String"
         },
-        "networkInterfaces_myVMNic_name": {
+        "NetworkCardName": {
             "defaultValue": "myVMNic",
             "type": "String"
         },
-        "networkSecurityGroups_MyNSG_name": {
+        "NetworkSecurityGroupName": {
             "defaultValue": "MyNSG",
             "type": "String"
         },
-        "publicIPAddresses_myPublicIP_name": {
+        "PublicIPName": {
             "defaultValue": "myPublicIP",
             "type": "String"
         },
-        "virtualNetworks_MyVNET_name": {
+        "VnetName": {
             "defaultValue": "MyVNET",
             "type": "String"
         },
-        "storageAccounts_g6k7wyuv4ejjgsalinuxvm_name": {
-            "defaultValue": "g6k7wyuv4ejjgsalinuxvm",
+        "StorageAccount": {
+            "defaultValue": "MyStorageAccount",
             "type": "String"
         }
     },
     "variables": {},
     "resources": [
         {
-            "comments": "リソース '/subscriptions/52acde66-8a77-44d7-9724-1a782d412ab4/resourceGroups/pakubuntu1604/providers/Microsoft.Compute/virtualMachines/Ubuntu1604VM' から一般化されました。",
             "type": "Microsoft.Compute/virtualMachines",
-            "name": "[parameters('virtualMachines_Ubuntu1604VM_name')]",
+            "name": "[parameters('VirtualMachineName')]",
             "apiVersion": "2015-06-15",
             "location": "japanwest",
             "properties": {
@@ -54,7 +54,7 @@
                         "name": "osdisk",
                         "createOption": "FromImage",
                         "vhd": {
-                            "uri": "[concat('http', '://', parameters('storageAccounts_g6k7wyuv4ejjgsalinuxvm_name'), '.blob.core.windows.net', '/vhds/osdiskforlinuxsimple.vhd')]"
+                            "uri": "[concat('http', '://', parameters('StorageAccount'), '.blob.core.windows.net', '/vhds/osdiskforubunu160400.vhd')]"
                         },
                         "caching": "ReadWrite"
                     },
@@ -64,7 +64,7 @@
                             "name": "datadisk1",
                             "createOption": "Empty",
                             "vhd": {
-                                "uri": "[concat('http', '://', parameters('storageAccounts_g6k7wyuv4ejjgsalinuxvm_name'), '.blob.core.windows.net', '/vhds/datadisk1.vhd')]"
+                                "uri": "[concat('http', '://', parameters('StorageAccount'), '.blob.core.windows.net', '/vhds/datadisk1.vhd')]"
                             },
                             "caching": "None",
                             "diskSizeGB": 100
@@ -72,31 +72,30 @@
                     ]
                 },
                 "osProfile": {
-                    "computerName": "[parameters('virtualMachines_Ubuntu1604VM_name')]",
+                    "computerName": "[parameters('VirtualMachineName')]",
                     "adminUsername": "pakue",
                     "linuxConfiguration": {
                         "disablePasswordAuthentication": false
                     },
                     "secrets": [],
-                    "adminPassword": "[parameters('virtualMachines_Ubuntu1604VM_adminPassword')]"
+                    "adminPassword": "[parameters('AdminPassword')]"
                 },
                 "networkProfile": {
                     "networkInterfaces": [
                         {
-                            "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_myVMNic_name'))]"
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('NetworkCardNAme'))]"
                         }
                     ]
                 }
             },
             "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_g6k7wyuv4ejjgsalinuxvm_name'))]",
-                "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_myVMNic_name'))]"
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('StorageAccount'))]",
+                "[resourceId('Microsoft.Network/networkInterfaces', parameters('NetworkCardName'))]"
             ]
         },
         {
-            "comments": "リソース '/subscriptions/52acde66-8a77-44d7-9724-1a782d412ab4/resourceGroups/pakubuntu1604/providers/Microsoft.Network/networkInterfaces/myVMNic' から一般化されました。",
             "type": "Microsoft.Network/networkInterfaces",
-            "name": "[parameters('networkInterfaces_myVMNic_name')]",
+            "name": "[parameters('NetworkCardName')]",
             "apiVersion": "2015-06-15",
             "location": "japanwest",
             "properties": {
@@ -107,10 +106,10 @@
                             "privateIPAddress": "10.0.0.4",
                             "privateIPAllocationMethod": "Dynamic",
                             "publicIPAddress": {
-                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPAddresses_myPublicIP_name'))]"
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('PublicIPName'))]"
                             },
                             "subnet": {
-                                "id": "[concat(resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_MyVNET_name')), '/subnets/Subnet')]"
+                                "id": "[concat(resourceId('Microsoft.Network/virtualNetworks', parameters('VnetName')), '/subnets/Subnet')]"
                             }
                         }
                     }
@@ -120,19 +119,18 @@
                 },
                 "enableIPForwarding": false,
                 "networkSecurityGroup": {
-                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_MyNSG_name'))]"
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('NetworkSecurityGroupName'))]"
                 }
             },
             "dependsOn": [
-                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPAddresses_myPublicIP_name'))]",
-                "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_MyVNET_name'))]",
-                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_MyNSG_name'))]"
+                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('PublicIPName'))]",
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('VnetName'))]",
+                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('NetworkSecurityGroupName'))]"
             ]
         },
         {
-            "comments": "リソース '/subscriptions/52acde66-8a77-44d7-9724-1a782d412ab4/resourceGroups/pakubuntu1604/providers/Microsoft.Network/networkSecurityGroups/MyNSG' から一般化されました。",
             "type": "Microsoft.Network/networkSecurityGroups",
-            "name": "[parameters('networkSecurityGroups_MyNSG_name')]",
+            "name": "[parameters('NetworkSecurityGroupName')]",
             "apiVersion": "2015-06-15",
             "location": "japanwest",
             "properties": {
@@ -149,30 +147,41 @@
                             "priority": 100,
                             "direction": "Inbound"
                         }
-                    }
+                    },
+                    {
+                        "name": "http",
+                        "properties": {
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "80",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 101,
+                            "direction": "Inbound"
+                        }
+                     }   
                 ]
             },
             "dependsOn": []
         },
         {
-            "comments": "リソース '/subscriptions/52acde66-8a77-44d7-9724-1a782d412ab4/resourceGroups/pakubuntu1604/providers/Microsoft.Network/publicIPAddresses/myPublicIP' から一般化されました。",
             "type": "Microsoft.Network/publicIPAddresses",
-            "name": "[parameters('publicIPAddresses_myPublicIP_name')]",
+            "name": "[parameters('PublicIPName')]",
             "apiVersion": "2015-06-15",
             "location": "japanwest",
             "properties": {
                 "publicIPAllocationMethod": "Dynamic",
                 "idleTimeoutInMinutes": 4,
                 "dnsSettings": {
-                    "domainNameLabel": "[parameters('virtualMachines_Ubuntu1604VM_name')]"
+                    "domainNameLabel": "[parameters('VirtualMachineName')]"
                 }
             },
             "dependsOn": []
         },
         {
-            "comments": "リソース '/subscriptions/52acde66-8a77-44d7-9724-1a782d412ab4/resourceGroups/pakubuntu1604/providers/Microsoft.Network/virtualNetworks/MyVNET' から一般化されました。",
             "type": "Microsoft.Network/virtualNetworks",
-            "name": "[parameters('virtualNetworks_MyVNET_name')]",
+            "name": "[parameters('VnetName')]",
             "apiVersion": "2015-06-15",
             "location": "japanwest",
             "properties": {
@@ -193,9 +202,8 @@
             "dependsOn": []
         },
         {
-            "comments": "リソース '/subscriptions/52acde66-8a77-44d7-9724-1a782d412ab4/resourceGroups/pakubuntu1604/providers/Microsoft.Storage/storageAccounts/g6k7wyuv4ejjgsalinuxvm' から一般化されました。",
             "type": "Microsoft.Storage/storageAccounts",
-            "name": "[parameters('storageAccounts_g6k7wyuv4ejjgsalinuxvm_name')]",
+            "name": "[parameters('StorageAccount')]",
             "apiVersion": "2015-06-15",
             "location": "japanwest",
             "tags": {},
