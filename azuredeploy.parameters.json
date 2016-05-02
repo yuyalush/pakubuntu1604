@@ -2,26 +2,26 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "virtualMachines_Ubuntu1604VM_adminPassword": {
-            "value": null
+        "AdminPassword": {
+            "value": ""
         },
-        "virtualMachines_Ubuntu1604VM_name": {
-            "value": null
+        "VirtualMachineName": {
+            "value": "paku1604c1"
         },
-        "networkInterfaces_myVMNic_name": {
-            "value": null
+        "NetworkCardName": {
+            "value": "pakunic1"
         },
-        "networkSecurityGroups_MyNSG_name": {
-            "value": null
+        "NetworkSecurityGroupName": {
+            "value": "blogcnt"
         },
-        "publicIPAddresses_myPublicIP_name": {
-            "value": null
+        "PublicIPName": {
+            "value": "paku1604c1"
         },
-        "virtualNetworks_MyVNET_name": {
-            "value": null
+        "VnetName": {
+            "value": "paku1604vnet"
         },
-        "storageAccounts_g6k7wyuv4ejjgsalinuxvm_name": {
-            "value": null
+        "StorageAccount": {
+            "value": "paku1604c"
         }
     }
 }

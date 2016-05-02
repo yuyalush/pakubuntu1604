@@ -5,34 +5,36 @@
     "parameters": {
         "AdminPassword": {
             "defaultValue": null,
-            "type": "SecureString"
+            "type": "securestring"
         },
         "VirtualMachineName": {
             "defaultValue": "ubuntu1604vm",
-            "type": "String"
+            "type": "string"
         },
         "NetworkCardName": {
             "defaultValue": "myVMNic",
-            "type": "String"
+            "type": "string"
         },
         "NetworkSecurityGroupName": {
             "defaultValue": "MyNSG",
-            "type": "String"
+            "type": "string"
         },
         "PublicIPName": {
             "defaultValue": "myPublicIP",
-            "type": "String"
+            "type": "string"
         },
         "VnetName": {
             "defaultValue": "MyVNET",
-            "type": "String"
+            "type": "string"
         },
         "StorageAccount": {
             "defaultValue": "MyStorageAccount",
-            "type": "String"
+            "type": "string"
         }
     },
-    "variables": {},
+    "variables": {
+         "extensionName": "DockerExtension"
+    },
     "resources": [
         {
             "type": "Microsoft.Compute/virtualMachines",
@@ -211,6 +213,22 @@
                 "accountType": "Standard_LRS"
             },
             "dependsOn": []
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "name": "[concat(parameters('VirtualMachineName'),'/', variables('extensionName'))]",
+            "apiVersion": "2015-05-01-preview",
+            "location": "[resourceGroup().location]",
+                "dependsOn": [
+                    "[concat('Microsoft.Compute/virtualMachines/', parameters('VirtualMachineName'))]"
+                ],
+            "properties": {
+                "publisher": "Microsoft.Azure.Extensions",
+                "type": "DockerExtension",
+                "typeHandlerVersion": "1.0",
+                "autoUpgradeMinorVersion": true,
+                "settings": { }
+             }
         }
     ]
 }
