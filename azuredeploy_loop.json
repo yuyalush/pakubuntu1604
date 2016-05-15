@@ -1,0 +1,257 @@
+
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "AdminPassword": {
+            "defaultValue": null,
+            "type": "securestring"
+        },
+        "VirtualMachineName": {
+            "defaultValue": "ubuntu1604vm",
+            "type": "string"
+        },
+        "numberOfInstances": {
+            "type": "int",
+            "defaultValue": 2,
+            "metadata": {
+                "description": "Number of VMs to deploy"
+            }
+        },
+        "NetworkCardName": {
+            "defaultValue": "myVMNic",
+            "type": "string"
+        },
+        "NetworkSecurityGroupName": {
+            "defaultValue": "MyNSG",
+            "type": "string"
+        },
+        "PublicIPName": {
+            "defaultValue": "myPublicIP",
+            "type": "string"
+        },
+        "VnetName": {
+            "defaultValue": "MyVNET",
+            "type": "string"
+        },
+        "StorageAccount": {
+            "defaultValue": "storage",
+            "type": "string"
+        }
+    },
+    "variables": {
+         "extensionName": "DockerExtension"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "name": "[concat(parameters('StorageAccount'),uniquestring(resourceGroup().id))]",
+            "apiVersion": "2015-06-15",
+            "location": "japanwest",
+            "tags": {},
+            "properties": {
+                "accountType": "Standard_LRS"
+            },
+            "dependsOn": []
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks",
+            "name": "[parameters('VnetName')]",
+            "apiVersion": "2015-06-15",
+            "location": "japanwest",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "10.0.0.0/16"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "Subnet",
+                        "properties": {
+                            "addressPrefix": "10.0.0.0/24"
+                        }
+                    }
+                ]
+            },
+            "dependsOn": []
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "name": "[parameters('NetworkSecurityGroupName')]",
+            "apiVersion": "2015-06-15",
+            "location": "japanwest",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "ssh",
+                        "properties": {
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "22",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 100,
+                            "direction": "Inbound"
+                        }
+                    },
+                    {
+                        "name": "http",
+                        "properties": {
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "80",
+                            "sourceAddressPrefix": "*",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 101,
+                            "direction": "Inbound"
+                        }
+                     }   
+                ]
+            },
+            "dependsOn": []
+        },
+        {
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "[concat(parameters('PublicIPName'),copyIndex())]",
+            "apiVersion": "2015-06-15",
+            "location": "japanwest",
+            "copy": {
+                "name": "pipLoop",
+                "count": "[parameters('numberOfInstances')]"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic",
+                "idleTimeoutInMinutes": 4,
+                "dnsSettings": {
+                    "domainNameLabel": "[concat(parameters('VirtualMachineName'),copyIndex())]"
+                }
+            },
+            "dependsOn": []
+        },
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[concat(parameters('NetworkCardName'),copyIndex())]",
+            "apiVersion": "2015-06-15",
+            "location": "japanwest",
+            "copy": {
+                "name": "nicLoop",
+                "count": "[parameters('numberOfInstances')]"
+            },
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "privateIPAddress": "10.0.0.4",
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('PublicIPName'),copyIndex()))]"
+                            },
+                            "subnet": {
+                                "id": "[concat(resourceId('Microsoft.Network/virtualNetworks', parameters('VnetName')), '/subnets/Subnet')]"
+                            }
+                        }
+                    }
+                ],
+                "dnsSettings": {
+                    "dnsServers": []
+                },
+                "enableIPForwarding": false,
+                "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('NetworkSecurityGroupName'))]"
+                }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('PublicIPName'),copyIndex()))]",
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('VnetName'))]",
+                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('NetworkSecurityGroupName'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "name": "[concat(parameters('VirtualMachineName'),copyIndex())]",
+            "apiVersion": "2015-06-15",
+            "location": "japanwest",
+            "copy": {
+                "name": "vmLoop",
+                "count": "[parameters('numberOfInstances')]"
+            },
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "Standard_A0"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "Canonical",
+                        "offer": "UbuntuServer",
+                        "sku": "16.04.0-LTS",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "name": "osdisk",
+                        "createOption": "FromImage",
+                        "vhd": {
+                            "uri": "[concat('http', '://', parameters('StorageAccount'),uniquestring(resourceGroup().id), '.blob.core.windows.net', '/vhds/osdiskforubunu160400',copyIndex(),'.vhd')]"
+                        },
+                        "caching": "ReadWrite"
+                    },
+                    "dataDisks": [
+                        {
+                            "lun": 0,
+                            "name": "datadisk1",
+                            "createOption": "Empty",
+                            "vhd": {
+                                "uri": "[concat('http', '://', parameters('StorageAccount'),uniquestring(resourceGroup().id), '.blob.core.windows.net', '/vhds/datadisk1',copyIndex(),'.vhd')]"
+                            },
+                            "caching": "None",
+                            "diskSizeGB": 100
+                        }
+                    ]
+                },
+                "osProfile": {
+                    "computerName": "[concat(parameters('VirtualMachineName'),copyIndex())]",
+                    "adminUsername": "pakue",
+                    "linuxConfiguration": {
+                        "disablePasswordAuthentication": false
+                    },
+                    "secrets": [],
+                    "adminPassword": "[parameters('AdminPassword')]"
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('NetworkCardName'),copyIndex()))]"
+                        }
+                    ]
+                }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', concat(parameters('StorageAccount'),uniquestring(resourceGroup().id)))]",
+                "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('NetworkCardName'),copyIndex()))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "name": "[concat(parameters('VirtualMachineName'),copyIndex(),'/', variables('extensionName'))]",
+            "apiVersion": "2015-05-01-preview",
+            "location": "[resourceGroup().location]",
+            "copy": {
+                "name": "extLoop",
+                "count": "[parameters('numberOfInstances')]"
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Compute/virtualMachines/', parameters('VirtualMachineName'),copyIndex())]"
+            ],
+            "properties": {
+                "publisher": "Microsoft.Azure.Extensions",
+                "type": "DockerExtension",
+                "typeHandlerVersion": "1.0",
+                "autoUpgradeMinorVersion": true,
+                "settings": { }
+             }
+        }
+    ]
+}
